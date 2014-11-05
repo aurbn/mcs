@@ -145,6 +145,7 @@ p <- p + coord_equal()
 p <- p + theme_bw()
 p <- p + theme(axis.text.x=element_text(angle=45, hjust=1, size=8))
 ggsave(heatmap.file)
+dev.off()
 print(p)
 write.csv(dh.raw, result.file)
 

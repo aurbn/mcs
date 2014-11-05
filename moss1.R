@@ -115,9 +115,10 @@ p <- p + scale_x_discrete(expand = c(0, 0))
 p <- p + scale_y_discrete(expand = c(0, 0))
 p <- p + coord_equal()
 p <- p + theme_bw() 
-print(p)
-ggsave(heatmap.file, plot=p)
 
+ggsave(heatmap.file, plot=p)
+dev.off()
+print(p)
 
 write.csv(dh.raw, result.file)
 
