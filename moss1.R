@@ -1,13 +1,25 @@
-setwd("~/mcs/Metabolome/")
+setwd(".")
 data.file = "./data/moss1_data.txt"
 samples.file = "./data/moss1_samples.txt"
 heatmap.file = "./results/moss1_heatmap.png"
 result.file = "./results/moss1_results.txt"
+names.file = "./names.txt"
 control = c('K') #list of control experiments ids
 PV_REQ = 0.05 #Requested p-value for metabolite selection
 
-data = read.csv(data.file, header=T)
+data = read.csv(data.file, header=T, stringsAsFactors=F)
 data[is.na(data)] <- 0 # empty cell => no metabolite
+
+#convert names
+names = read.csv(names.file,sep=";", header=F, stringsAsFactors=F)
+colnames(names) <- c("tid", "hrname")
+names$tid <- gsub("(RI=.+),.+","\\1", names$tid)
+data$tid <- gsub("(RI=.+),.+","\\1", data$Name)
+data <- merge(x=data, y=names, by="tid", all.x=T, all.y=F)
+names.found <- !is.na(data$hrname)
+data[names.found, "Name"] = data[names.found, "hrname"]
+data$tid <- NULL
+data$hrname <- NULL
 
 samples = read.csv(samples.file, header=T)
 states = unique(samples$state) # biological states
@@ -50,13 +62,12 @@ for (s in states)
 # rownames(dh) <- dh$Name
 # dh$Name <- NULL
 
-#consruct dataframe with fold changes for each found Metabolite 
-d = data[data$Name,]
-dh = data.frame(Name = d$Name) #data for heatmap
+#consruct dXataframe with fold changes for each found Metabolite 
+dh = data.frame(Name = data$Name) #data for heatmap
 for (s in all_states)
 {
     se = paste0("X", samples[samples$state == s, "sample"]) #experiment samples
-    dh = cbind(dh, apply(d[,se], 1, mean))
+    dh = cbind(dh, apply(data[,se], 1, mean))
 }
 names(dh) = c("Name", all_states)
 rownames(dh) <- dh$Name

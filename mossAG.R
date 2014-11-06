@@ -1,15 +1,16 @@
-setwd("~/mcs/Metabolome/")
+setwd(".")
 data.file1 = "./data/moss1_data.txt"
 samples.file1 = "./data/moss1_samples.txt"
 data.file2 = "./data/moss2_data.txt"
 samples.file2 = "./data/moss2_Gsamples.txt"
 heatmap.file = "./results/mossAG_heatmap.png"
 result.file = "./results/mossAG_results.txt"
+names.file = "./names.txt"
 control = c('K') #list of control experiments ids
 PV_REQ = 0.05 #Requested p-value for metabolite selection
 
 #First set of data
-data1 = read.csv(data.file1, header=T)
+data1 = read.csv(data.file1, header=T, stringsAsFactors=F)
 data1[is.na(data1)] <- 0 # empty cell => no metabolite
 colnames(data1) = gsub("X", "X1_", colnames(data1))
 samples1 = read.csv(samples.file1, header=T)
@@ -17,7 +18,7 @@ samples1$sample = paste0("1_", samples1$sample)
 
 
 #second set of data
-data2 = read.csv(data.file2, header=T)
+data2 = read.csv(data.file2, header=T, stringsAsFactors=F)
 data2[is.na(data2)] <- 0 # empty cell => no metabolite
 colnames(data2) = gsub("X", "X2_", colnames(data2))
 samples2 = read.csv(samples.file2, header=T)
@@ -29,9 +30,20 @@ states = unique(c(as.character(samples1$state),
 all_states = as.character(states)
 states = states[!(states %in% control)] # remove control from list
 
-
 samples = rbind(samples1, samples2)
 data = merge(x=data1, by.x="Name", y=data2, by.y="Name", all=TRUE)
+
+#convert names
+names = read.csv(names.file,sep=";", header=F, stringsAsFactors=F)
+colnames(names) <- c("tid", "hrname")
+names$tid <- gsub("(RI=.+),.+","\\1", names$tid)
+data$tid <- gsub("(RI=.+),.+","\\1", data$Name)
+data <- merge(x=data, y=names, by="tid", all.x=T, all.y=F)
+names.found <- !is.na(data$hrname)
+data[names.found, "Name"] = data[names.found, "hrname"]
+data$tid <- NULL
+data$hrname <- NULL
+
 #write.csv(data, "DATA_ALL.txt")
 
 
@@ -76,12 +88,11 @@ for (s in states)
 # dh$Name <- NULL
 
 #consruct dataframe with fold changes for each found Metabolite 
-d = data[data$Name,]
-dh = data.frame(Name = d$Name) #data for heatmap
+dh = data.frame(Name = data$Name) #data for heatmap
 for (s in all_states)
 {
     se = paste0("X", samples[samples$state == s, "sample"]) #experiment samples
-    dh = cbind(dh, apply(d[,se], 1, mean))
+    dh = cbind(dh, apply(data[,se], 1, mean))
 }
 names(dh) = c("Name", all_states)
 rownames(dh) <- dh$Name
