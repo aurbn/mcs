@@ -1,24 +1,21 @@
-2280 mz 204; pironose monosacharide conj anglikone
-2882 mw 658; ???1
-33.3989 min MOSS.10; sugar ? 361 disacharide
-RI=1231.0,  14.8216 min MOSS-4; malate
-RI=1273.9,  15.3600 min MOSS-4; pyroglutamate
-RI=1280.9,  15.4473 min MOSS-4; ASP (3TMS)
-RI=1343.5,  16.2334 min MOSS-4; threonine?
-RI=1358.2,  16.4180 min MOSS-4; erythronate
-RI=1657.5,  20.1735.min MOSS-4; glycerol-3-phosohate
-RI=1723.2,  20.9983.min.MOSS-6; neophytadiene
-RI=1780.5,  21.7169.min.MOSS-6; phytadiene
-RI=2401.7,  29.5064.min.MOSS-2-13; linear alyphatic - impur
-RI=2504.1,  30.8784.min.MOSS-2-14; 330?
-RI=2706.5,  33.3901.min.MOSS-2-19; MOSS.10 sugar
-RI=2969.9,  36.3176.min.MOSS-2-20; tregallose type dicachride_
-RI=697.3,   8.1231.min.MOSS-2-23; polyoxane - impur
-RI=811.9,   9.5615.min.MOSS-4; benzoate
-RI=868.1,   10.2668.min.MOSS-2-23; glycerol
-S 2810; tregallose type dicacharide
-RI=1840.5,  22.4698 min MOSS-6; a-glukopiranose
-RI=1836.6, 22.4211 min MOSS-6; dopamine
-RI=1443.0, 17.4815 min MOSS04; triethanolamine
-2348 mz 230; 16-hydroxykaurane 
-3012 mw 530; ???2
+2280 mz 204;pironose monosacharide conj anglikone
+33.3989 min MOSS.10;sugar ? 361 disacharide
+RI=1231.0,  14.8216 min MOSS-4;malate
+RI=1273.9,  15.3600 min MOSS-4;pyroglutamate
+RI=1280.9,  15.4473 min MOSS-4;ASP (3TMS)
+RI=1343.5,  16.2334 min MOSS-4;threonine?
+RI=1358.2,  16.4180 min MOSS-4;erythronate
+RI=1657.5,  20.1735.min MOSS-4;glycerol-3-phosohate
+RI=1723.2,  20.9983.min.MOSS-6;neophytadiene
+RI=1780.5,  21.7169.min.MOSS-6;phytadiene
+RI=2401.7,  29.5064.min.MOSS-2-13;linear alyphatic - impur
+RI=2706.5,  33.3901.min.MOSS-2-19;MOSS.10 sugar
+RI=2969.9,  36.3176.min.MOSS-2-20;tregallose type dicachride_
+RI=697.3,   8.1231.min.MOSS-2-23;polyoxane - impur
+RI=811.9,   9.5615.min.MOSS-4;benzoate
+RI=868.1,   10.2668.min.MOSS-2-23;glycerol
+S 2810;tregallose type dicacharide
+RI=1840.5,  22.4698 min MOSS-6;a-glukopiranose
+RI=1836.6, 22.4211 min MOSS-6;dopamine
+RI=1443.0, 17.4815 min MOSS04;triethanolamine
+2348 mz 230;16-hydroxykaurane 
