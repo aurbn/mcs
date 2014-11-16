@@ -26,20 +26,25 @@ process_metabolome <- function(data, samples, names_file = NULL, result_file=NUL
     {
         a = length(na.omit(row[c(k)])) 
         b = length(na.omit(row[c(e)]))
-        if ( (a >= 3 & b >= 3) | (a=2 & b>=5) | (b=2 & a>=5))
-        {
+        t = list(p.value = NA) # If test cannot be performed
+        try(
+            {
             t <- wilcox.test(as.numeric(na.omit(row[c(k)])),
-                             as.numeric(na.omit(row[c(e)])), correct = F, exact = F)
+                             as.numeric(na.omit(row[c(e)])),
+                             correct = F, exact = F)
+            }, TRUE)
+        
+        if(is.finite(t$p.value))
+        {
             return(t$p.value)
         }
         else
         {
             return(1)
-        }
+        }   
     }
     
     Metabs <- list()  #Metabolites of interest
-    browser()
     
     #test each state 
     for (s in states)
