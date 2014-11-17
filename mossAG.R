@@ -7,6 +7,7 @@ data.file2 = "./data/moss2_data.txt"
 samples.file2 = "./data/moss2_Gsamples.txt"
 heatmap.file = "./results/mossAG_heatmap.png"
 result.file = "./results/mossAG_results.txt"
+out.data.file="./results/DATA_ALL_AG.txt"
 names.file = "./names.txt"
 control = c('K') #list of control experiments ids
 PV_REQ = 0.05 #Requested p-value for metabolite selection
@@ -27,7 +28,8 @@ samples2$sample = paste0("2_", samples2$sample)
 
 samples = rbind(samples1, samples2)
 data = merge(x=data1, by.x="Name", y=data2, by.y="Name", all=TRUE)
+data[is.na(data)] <- 0 #if no metabolite => C = 0
 
-dm.m <- process_metabolome(data, samples, names.file, result.file)
+dm.m <- process_metabolome(data, samples, 10, names.file, result.file, out.data.file)
 
 draw_heatmap(dm.m, expression(log[10](fc)), heatmap.file)

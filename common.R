@@ -1,4 +1,6 @@
-process_metabolome <- function(data, samples, names_file = NULL, result_file=NULL)
+process_metabolome <- function(data, samples, logbase = 2,
+                               names_file = NULL, result_file=NULL,
+                               out_data_file=NULL)
 {
     #Collect states
     states = unique(c(as.character(samples$state))) # biological states
@@ -7,7 +9,7 @@ process_metabolome <- function(data, samples, names_file = NULL, result_file=NUL
     
     if(!is.null(names_file))
     {
-    #convert names
+        #convert names
         names = read.csv(names_file,sep=";", header=F, stringsAsFactors=F)
         colnames(names) <- c("tid", "hrname")
         names$tid <- gsub("(RI=.+),.+","\\1", names$tid)
@@ -18,9 +20,12 @@ process_metabolome <- function(data, samples, names_file = NULL, result_file=NUL
         data$tid <- NULL
         data$hrname <- NULL
     }
-    #write.csv(data, "DATA_ALL.txt")
     
-    
+    if(!is.null(out_data_file))
+    {
+        write.csv(data, out_data_file)
+    }
+       
     #Auxiliary function for statistical test
     tst <- function(row, k, e)
     {
@@ -90,7 +95,7 @@ process_metabolome <- function(data, samples, names_file = NULL, result_file=NUL
     
     dh.raw = dh
     dh = dh[rownames(dh) %in% Metabs,]
-    dh = log2(dh)
+    dh = log(dh, base=logbase)
     dh[,control] = NULL
     
     require(ggplot2)
@@ -115,8 +120,7 @@ process_metabolome <- function(data, samples, names_file = NULL, result_file=NUL
         write.csv(dh.raw, result_file)
     }
     
-    
-    return (dm.m)
+    return(dm.m)
 }
 
 draw_heatmap <- function(dm, label, filename=NULL, palette=NULL)

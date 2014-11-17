@@ -13,6 +13,6 @@ data = read.csv(data.file, header=T, stringsAsFactors=F)
 data[is.na(data)] <- 0 # empty cell => no metabolite
 samples = read.csv(samples.file, header=T)
 
-dm.m <- process_metabolome(data, samples, names.file, result.file)
+dm.m <- process_metabolome(data, samples, 2, names.file, result.file)
 
 draw_heatmap(dm.m, expression(log[2](fc)), heatmap.file)
