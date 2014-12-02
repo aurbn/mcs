@@ -5,7 +5,8 @@ process_metabolome <- function(data, samples, logbase = 2,
     #Collect states
     states = unique(c(as.character(samples$state))) # biological states
     all_states = as.character(states)
-    states = states[!(states %in% control)] # remove control from list
+    controls = unique(samples[,"ctrl"])
+    states = states[!(states %in% samples[,"ctrl"])] # remove control from list
     
     if(!is.null(names_file))
     {
@@ -36,7 +37,7 @@ process_metabolome <- function(data, samples, logbase = 2,
             {
             t <- wilcox.test(as.numeric(na.omit(row[c(k)])),
                              as.numeric(na.omit(row[c(e)])),
-                             exact = F)# correct = F)
+                             correct = F, exact = F)
             }, TRUE)
         
         if(is.finite(t$p.value))
@@ -54,6 +55,7 @@ process_metabolome <- function(data, samples, logbase = 2,
     #test each state 
     for (s in states)
     {
+        control = unique(samples[samples$state == s, "ctrl"])
         sk = paste0("X", samples[samples$state %in% control,"sample"]) #coltrol samples
         se = paste0("X", samples[samples$state == s        ,"sample"]) #experiment 
         pv <- apply(data, 1, tst, sk, se)
@@ -86,17 +88,34 @@ process_metabolome <- function(data, samples, logbase = 2,
     DF <- function(x,y){
         r = x/y
         r[x==0 & y==0] <- 1
-        r[x!=0 & y==0] <- mx/mn
+        r[x!=0 & y==0] <- Inf #mx/mn ## OR +Inf
         r
     }
     
-    dh = as.data.frame(sweep(dh, 1, dh[,control], FUN=DF)) #normalize to control)
+    #dh = as.data.frame(sweep(dh, 1, dh[,control], FUN=DF)) #normalize to control)
+    #SWEEP within each control
+    dh_ = NULL
+    for (cn in controls)
+    {
+        dt_ = as.data.frame(sweep(dh[,unique(samples[samples$ctrl==cn,"state"])],
+                              1, dh[,cn], FUN=DF))
+        if (is.null(dh_))
+        {
+            dh_ = dt_
+        }else
+        {
+            dh_ = cbind(dh_, dt_)
+        }
+    }
+    dh = dh_
+    rm(dh_)
+    
     ############################################
     
     dh.raw = dh
     dh = dh[rownames(dh) %in% Metabs,]
     dh = log(dh, base=logbase)
-    dh[,control] = NULL
+    dh[,controls] = list(NULL)
     
     require(ggplot2)
     require(reshape2)
