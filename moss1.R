@@ -12,7 +12,7 @@ PV_REQ = 0.05 #Requested p-value for metabolite selection
 data = read.csv(data.file, header=T, stringsAsFactors=F)
 data[is.na(data)] <- 0 # empty cell => no metabolite
 
-samples = read.csv(samples.file, header=T)
+samples = read.csv(samples.file, header=T, stringsAsFactors=F)
 
 dm.m <- process_metabolome(data, samples, 2, names.file, result.file)
 

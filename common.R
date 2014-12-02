@@ -5,7 +5,8 @@ process_metabolome <- function(data, samples, logbase = 2,
     #Collect states
     states = unique(c(as.character(samples$state))) # biological states
     all_states = as.character(states)
-    states = states[!(states %in% control)] # remove control from list
+    controls = unique(samples[,"ctrl"])
+    states = states[!(states %in% samples[,"ctrl"])] # remove control from list
     
     if(!is.null(names_file))
     {
@@ -36,7 +37,7 @@ process_metabolome <- function(data, samples, logbase = 2,
             {
             t <- wilcox.test(as.numeric(na.omit(row[c(k)])),
                              as.numeric(na.omit(row[c(e)])),
-                             exact = F)# correct = F)
+                             correct = F, exact = F)
             }, TRUE)
         
         if(is.finite(t$p.value))
@@ -54,6 +55,7 @@ process_metabolome <- function(data, samples, logbase = 2,
     #test each state 
     for (s in states)
     {
+        control = unique(samples[samples$state == s, "ctrl"])
         sk = paste0("X", samples[samples$state %in% control,"sample"]) #coltrol samples
         se = paste0("X", samples[samples$state == s        ,"sample"]) #experiment 
         pv <- apply(data, 1, tst, sk, se)
@@ -86,17 +88,34 @@ process_metabolome <- function(data, samples, logbase = 2,
     DF <- function(x,y){
         r = x/y
         r[x==0 & y==0] <- 1
-        r[x!=0 & y==0] <- mx/mn
+        r[x!=0 & y==0] <- Inf #mx/mn ## OR +Inf
         r
     }
     
-    dh = as.data.frame(sweep(dh, 1, dh[,control], FUN=DF)) #normalize to control)
+    #dh = as.data.frame(sweep(dh, 1, dh[,control], FUN=DF)) #normalize to control)
+    #SWEEP within each control
+    dh_ = NULL
+    for (cn in controls)
+    {
+        dt_ = as.data.frame(sweep(dh[,unique(samples[samples$ctrl==cn,"state"])],
+                              1, dh[,cn], FUN=DF))
+        if (is.null(dh_))
+        {
+            dh_ = dt_
+        }else
+        {
+            dh_ = cbind(dh_, dt_)
+        }
+    }
+    dh = dh_
+    rm(dh_)
+    
     ############################################
     
     dh.raw = dh
     dh = dh[rownames(dh) %in% Metabs,]
     dh = log(dh, base=logbase)
-    dh[,control] = NULL
+    dh[,controls] = list(NULL)
     
     require(ggplot2)
     require(reshape2)
@@ -104,17 +123,7 @@ process_metabolome <- function(data, samples, logbase = 2,
     
     dm = as.matrix(dh)
     dm.m = melt(dm)
-    
-    #handle infinites
-    t = dm.m$value
-    t = t[is.finite(t)]
-    mm = max(abs(t))
-    dinf = is.infinite(dm.m$value)
-    dm.m$value[dinf] <- mm*sign(dm.m$value[dinf])
-    
-    # NAAAAAA
-    dm.m = dm.m[!is.na(dm.m$value),]
-    
+
     if(!is.null(result_file))
     {    
         write.csv(dh.raw, result_file)
@@ -125,6 +134,15 @@ process_metabolome <- function(data, samples, logbase = 2,
 
 draw_heatmap <- function(dm, label, filename=NULL, palette=NULL)
 {
+    #handle infinites
+    t = dm$value
+    t = t[is.finite(t)]
+    mm = max(abs(t))
+    dinf = is.infinite(dm.m$value)
+    dm$value[dinf] <- mm*sign(dm$value[dinf])
+    dm$inflab <- ""
+    dm$inflab[dinf] <- "X"
+    
     if (is.null(palette))
     {
         #COLOR palletes setut is here
@@ -133,7 +151,8 @@ draw_heatmap <- function(dm, label, filename=NULL, palette=NULL)
     }
     mm = max(abs(dm$value))
     p <- ggplot(dm, aes(x=Var2, y=Var1, fill=value))
-    p <- p + geom_tile()
+    p <- p + geom_tile(aes(fill = value))
+    p <- p + geom_text(aes(label = inflab))
     p <- p + scale_fill_gradientn(colours = myPalette(20), 
                                   name=label, limits=c(-mm,mm))
     p <- p + xlab("Treatment") + ylab("Metabolite")
@@ -142,6 +161,7 @@ draw_heatmap <- function(dm, label, filename=NULL, palette=NULL)
     p <- p + coord_equal()
     p <- p + theme_bw()
     p <- p + theme(axis.text.x=element_text(angle=45, hjust=1))
+
     if (!is.null(filename))
     {
         ggsave(heatmap.file)

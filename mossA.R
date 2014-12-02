@@ -1,5 +1,5 @@
 rm(list=ls())
-source("commonA.R")
+source("common.R")
 
 data.file1 = "./data/moss1_data.txt"
 #samples.file1 = "./data/moss1_samples.txt"
@@ -41,3 +41,4 @@ data[is.na(data)] <- 0 #if no metabolite => C = 0
 dm.m <- process_metabolome(data, samples, 10, names.file, result.file, out.data.file)
 
 draw_heatmap(dm.m, expression(log[10](fc)), heatmap.file)
+
