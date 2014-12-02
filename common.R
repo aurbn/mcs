@@ -142,6 +142,8 @@ draw_heatmap <- function(dm, label, filename=NULL, palette=NULL)
     dm$value[dinf] <- mm*sign(dm$value[dinf])
     dm$inflab <- ""
     dm$inflab[dinf] <- "X"
+    dm$inflab[!dinf] <- round(dm$value[!dinf], digits=1)
+    
     
     if (is.null(palette))
     {
@@ -152,7 +154,7 @@ draw_heatmap <- function(dm, label, filename=NULL, palette=NULL)
     mm = max(abs(dm$value))
     p <- ggplot(dm, aes(x=Var2, y=Var1, fill=value))
     p <- p + geom_tile(aes(fill = value))
-    p <- p + geom_text(aes(label = inflab))
+    p <- p + geom_text(aes(label = inflab), size=4)
     p <- p + scale_fill_gradientn(colours = myPalette(20), 
                                   name=label, limits=c(-mm,mm))
     p <- p + xlab("Treatment") + ylab("Metabolite")
