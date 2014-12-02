@@ -1,3 +1,7 @@
+require(ggplot2)
+require(reshape2)
+require(RColorBrewer)
+
 process_metabolome <- function(data, samples, logbase = 2,
                                names_file = NULL, result_file=NULL,
                                out_data_file=NULL)
@@ -59,7 +63,6 @@ process_metabolome <- function(data, samples, logbase = 2,
         sk = paste0("X", samples[samples$state %in% control,"sample"]) #coltrol samples
         se = paste0("X", samples[samples$state == s        ,"sample"]) #experiment 
         pv <- apply(data, 1, tst, sk, se)
-        pv[is.na(pv)] <- 1
         Metabs <- unique(c(Metabs, as.character(data[pv < PV_REQ, "Name"])))
         
     }
@@ -117,28 +120,28 @@ process_metabolome <- function(data, samples, logbase = 2,
     dh = log(dh, base=logbase)
     dh[,controls] = list(NULL)
     
-    require(ggplot2)
-    require(reshape2)
-    require(RColorBrewer)
+
     
-    dm = as.matrix(dh)
-    dm.m = melt(dm)
+
 
     if(!is.null(result_file))
     {    
         write.csv(dh.raw, result_file)
     }
     
-    return(dm.m)
+    return(dh)
 }
 
-draw_heatmap <- function(dm, label, filename=NULL, palette=NULL)
+draw_heatmap <- function(data, label, filename=NULL, palette=NULL)
 {
+    dm = as.matrix(data)
+    dm = melt(dm)
+    
     #handle infinites
     t = dm$value
     t = t[is.finite(t)]
     mm = max(abs(t))
-    dinf = is.infinite(dm.m$value)
+    dinf = is.infinite(dm$value)
     dm$value[dinf] <- mm*sign(dm$value[dinf])
     dm$inflab <- ""
     dm$inflab[dinf] <- "X"
@@ -166,7 +169,7 @@ draw_heatmap <- function(dm, label, filename=NULL, palette=NULL)
 
     if (!is.null(filename))
     {
-        ggsave(heatmap.file, scale=3)
+        ggsave(filename, scale=3)
         dev.off()
     }
     print(p)
