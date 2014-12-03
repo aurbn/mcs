@@ -90,7 +90,7 @@ process_metabolome <- function(data, samples, logbase = 2,
     
     DF <- function(x,y){
         r = x/y
-        r[x==0 & y==0] <- 1
+        r[x==0 & y==0] <- NaN
         r[x!=0 & y==0] <- Inf #mx/mn ## OR +Inf
         r
     }
@@ -121,9 +121,6 @@ process_metabolome <- function(data, samples, logbase = 2,
     dh[,controls] = list(NULL)
     
 
-    
-
-
     if(!is.null(result_file))
     {    
         write.csv(dh.raw, result_file)
@@ -139,12 +136,15 @@ draw_heatmap <- function(data, label, filename=NULL, palette=NULL)
     
     #handle infinites
     t = dm$value
+    dnan = is.nan(t)
+    dm$value[dnan] <- 0
     t = t[is.finite(t)]
     mm = max(abs(t))
     dinf = is.infinite(dm$value)
     dm$value[dinf] <- mm*sign(dm$value[dinf])
     dm$inflab <- ""
     dm$inflab[dinf] <- "X"
+    dm$inflab[dnan] <- "+"
    # dm$inflab[!dinf] <- round(dm$value[!dinf], digits=1)
     
     
