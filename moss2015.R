@@ -16,16 +16,18 @@ data$sample <- sapply(strsplit(data$FileName, split = '-'), "[", 2)
 data$sample <- sapply(strsplit(data$sample, split = '\\.'), "[", 1)
 data$FileName <- NULL
 data$Name <- sub("^[?[:space:]]*", "", data$Name)
-d <- dcast(data, sample+Name ~ Conc.)
+d <- dcast(data, Name ~ sample, value.var = "Conc.")
+
+d[is.na(d)] <- 0  # It's wrong remake it!!!!
 
 
 
-samples = read.csv(samples.fileA, header=T, stringsAsFactors=F)
+samples = read.csv(samples.file, header=T, stringsAsFactors=F)
 
-data = merge(x=data1, by.x="Name", y=data2, by.y="Name", all=TRUE)
-data[is.na(data)] <- 0 #if no metabolite => C = 0
+names(d) <- paste0("X", names(d)) # Compatibility with old code
+names(d)[1] <- "Name"
 
-dm.m <- process_metabolome(data, samples, 10, names.file, result.file, out.data.file)
+dm.m <- process_metabolome(d, samples, 10, names.file, result.file)
 
 draw_heatmap(dm.m, expression(log[10](fc)), heatmap.file)
 
