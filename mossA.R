@@ -9,6 +9,8 @@ result.file = "./results/mossA_results.txt"
 out.data.file="./results/DATA_ALL_A.txt"
 names.file = "./names.txt"
 PV_REQ = 0.05 #Requested p-value for metabolite selection
+MARK_K0_E0 <- ""
+
 
 #First set of data
 data1 = read.csv(data.file1, header=T, stringsAsFactors=F)

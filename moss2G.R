@@ -8,6 +8,7 @@ result.file = "./results/moss2_Gresults.txt"
 names.file = "./names.txt"
 control = c('K') #list of control experiments ids
 PV_REQ = 0.05 #Requested p-value for metabolite selection
+MARK_K0_E0 <- ""
 
 data = read.csv(data.file, header=T, stringsAsFactors=F)
 data[is.na(data)] <- 0 # empty cell => no metabolite

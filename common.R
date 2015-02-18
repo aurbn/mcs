@@ -90,7 +90,7 @@ process_metabolome <- function(data, samples, logbase = 2,
     
     DF <- function(x,y){
         r = x/y
-        r[x==0 & y==0] <- 1
+        r[x==0 & y==0] <- NA
         r[x!=0 & y==0] <- Inf #mx/mn ## OR +Inf
         r
     }
@@ -142,9 +142,12 @@ draw_heatmap <- function(data, label, filename=NULL, palette=NULL)
     t = t[is.finite(t)]
     mm = max(abs(t))
     dinf = is.infinite(dm$value)
+    deql = is.na(dm$value)
+    dm$value[deql] <- 0
     dm$value[dinf] <- mm*sign(dm$value[dinf])
     dm$inflab <- ""
     dm$inflab[dinf] <- "X"
+    dm$inflab[deql] <- MARK_K0_E0
    # dm$inflab[!dinf] <- round(dm$value[!dinf], digits=1)
     
     

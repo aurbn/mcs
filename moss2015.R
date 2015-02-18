@@ -7,6 +7,7 @@ heatmap.file = "./results/moss2015.png"
 result.file = "./results/moss2015.txt"
 names.file = "./names.txt"
 PV_REQ = 0.05 #Requested p-value for metabolite selection
+MARK_K0_E0 <- "+"
 require(reshape2)
 
 # Read the data
