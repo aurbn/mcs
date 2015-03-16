@@ -2,6 +2,8 @@ rm(list=ls())
 source("common.R")
 
 data.file = "./data/moss2015_raw.txt"
+data.file.old = "./data/moss2_2015.data"
+
 samples.file = "./data/moss2015_samples.txt"
 heatmap.file = "./results/moss2015.png"
 result.file = "./results/moss2015.txt"
@@ -19,16 +21,22 @@ data$FileName <- NULL
 data$Name <- sub("^[?[:space:]]*", "", data$Name)
 d <- dcast(data, Name ~ sample, value.var = "Conc.")
 
-d[is.na(d)] <- 0  # It's wrong remake it!!!!
+names(d) <- paste0("X", names(d)) # Compatibility with old code
+names(d)[1] <- "Name"
+
+data = read.csv(data.file.old, header=T, stringsAsFactors=F)
+data[is.na(data)] <- 0 # empty cell => no metabolite
+
+data = merge(d, data, by = "Name")
+data[is.na(data)] <- 0  # It's wrong remake it!!!!
 
 
 
 samples = read.csv(samples.file, header=T, stringsAsFactors=F)
 
-names(d) <- paste0("X", names(d)) # Compatibility with old code
-names(d)[1] <- "Name"
 
-dm.m <- process_metabolome(d, samples, 10, names.file, result.file)
+
+dm.m <- process_metabolome(data, samples, 10, names.file, result.file)
 
 draw_heatmap(dm.m, expression(log[10](fc)), heatmap.file)
 
