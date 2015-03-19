@@ -35,6 +35,7 @@ d3 <- read.csv(data.file.old, header=T, stringsAsFactors=F)
 d3[is.na(d3)] <- 0 # empty cell => no metabolite
 
 samples <- read.csv(samples.file, header=T, stringsAsFactors=F)
+rownames(samples) <- samples$sample
 s1 <- samples[samples$ctrl == "K0",]
 s2 <- samples[samples$ctrl == "K5",]
 s3 <- samples[samples$ctrl == "K30",]

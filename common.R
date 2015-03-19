@@ -55,6 +55,14 @@ process_metabolome <- function(data, samples, logbase = 2,
         }   
     }
     
+    
+    ### Normaize by mass ###
+    for (s in samples$sample)
+    {
+        s_ = paste0("X", s)
+        data[,s_] <- data[,s_]/samples[as.character(s), "mass"]
+    }
+    
     if (length(req) > 0)
         Metabs <- req
     else
