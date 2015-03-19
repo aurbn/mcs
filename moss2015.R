@@ -5,7 +5,7 @@ data.file = "./data/moss2015_raw.txt"
 data.file.old = "./data/moss2_2015.data"
 
 samples.file = "./data/moss2015_samples.txt"
-heatmap.file = "./results/moss2015.png"
+heatmap.file = "./results/moss2015"
 result.file = "./results/moss2015.txt"
 names.file = "./names.txt"
 PV_REQ = 0.05 #Requested p-value for metabolite selection
@@ -19,24 +19,43 @@ data$sample <- sapply(strsplit(data$FileName, split = '-'), "[", 2)
 data$sample <- sapply(strsplit(data$sample, split = '\\.'), "[", 1)
 data$FileName <- NULL
 data$Name <- sub("^[?[:space:]]*", "", data$Name)
-d <- dcast(data, Name ~ sample, value.var = "Conc.")
+d1 <- data[data$sample %in% 1:36,]
+d2 <- data[data$sample %in% 37:72,]
+d1 <- dcast(d1, Name ~ sample, value.var = "Conc.")
+d2 <- dcast(d2, Name ~ sample, value.var = "Conc.")
 
-names(d) <- paste0("X", names(d)) # Compatibility with old code
-names(d)[1] <- "Name"
+names(d1) <- paste0("X", names(d1)) # Compatibility with old code
+names(d1)[1] <- "Name"
+d1[is.na(d1)] <- 0 # empty cell => no metabolite
+names(d2) <- paste0("X", names(d2)) # Compatibility with old code
+names(d2)[1] <- "Name"
+d2[is.na(d2)] <- 0 # empty cell => no metabolite
 
-data = read.csv(data.file.old, header=T, stringsAsFactors=F)
-data[is.na(data)] <- 0 # empty cell => no metabolite
+d3 <- read.csv(data.file.old, header=T, stringsAsFactors=F)
+d3[is.na(d3)] <- 0 # empty cell => no metabolite
 
-data = merge(d, data, by = "Name")
-data[is.na(data)] <- 0  # It's wrong remake it!!!!
+samples <- read.csv(samples.file, header=T, stringsAsFactors=F)
+s1 <- samples[samples$ctrl == "K0",]
+s2 <- samples[samples$ctrl == "K5",]
+s3 <- samples[samples$ctrl == "K30",]
+
+mts <- c()
+
+dm.m <- process_metabolome(d1, s1, 10, names.file, result.file)
+mts <- c(mts, rownames(dm.m))
+
+dm.m <- process_metabolome(d2, s2, 10, names.file, result.file)
+mts <- c(mts, rownames(dm.m))
+
+dm.m <- process_metabolome(d3, s3, 10, names.file, result.file)
+mts <- c(mts, rownames(dm.m))
 
 
+dm.m <- process_metabolome(d1, s1, 10, names.file, result.file, req = mts)
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_01.png"))
 
-samples = read.csv(samples.file, header=T, stringsAsFactors=F)
+dm.m <- process_metabolome(d2, s2, 10, names.file, result.file, req = mts)
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_05.png"))
 
-
-
-dm.m <- process_metabolome(data, samples, 10, names.file, result.file)
-
-draw_heatmap(dm.m, expression(log[10](fc)), heatmap.file)
-
+dm.m <- process_metabolome(d3, s3, 10, names.file, result.file, req = mts)
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_30.png"))

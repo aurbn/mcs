@@ -4,7 +4,8 @@ require(RColorBrewer)
 
 process_metabolome <- function(data, samples, logbase = 2,
                                names_file = NULL, result_file=NULL,
-                               out_data_file=NULL)
+                               out_data_file=NULL,
+                               req = c())
 {
     #Collect states
     states = unique(c(as.character(samples$state))) # biological states
@@ -54,17 +55,22 @@ process_metabolome <- function(data, samples, logbase = 2,
         }   
     }
     
-    Metabs <- list()  #Metabolites of interest
-    
-    #test each state 
-    for (s in states)
+    if (length(req) > 0)
+        Metabs <- req
+    else
     {
-        control = unique(samples[samples$state == s, "ctrl"])
-        sk = paste0("X", samples[samples$state %in% control,"sample"]) #coltrol samples
-        se = paste0("X", samples[samples$state == s        ,"sample"]) #experiment 
-        pv <- apply(data, 1, tst, sk, se)
-        Metabs <- unique(c(Metabs, as.character(data[pv < PV_REQ, "Name"])))
-        
+        Metabs <- c() #Metabolites of interest
+                
+        #test each state 
+        for (s in states)
+        {
+            control = unique(samples[samples$state == s, "ctrl"])
+            sk = paste0("X", samples[samples$state %in% control,"sample"]) #coltrol samples
+            se = paste0("X", samples[samples$state == s        ,"sample"]) #experiment 
+            pv <- apply(data, 1, tst, sk, se)
+            Metabs <- unique(c(Metabs, as.character(data[pv < PV_REQ, "Name"])))
+            
+        }
     }
 
     #consruct dataframe with fold changes for each found Metabolite 
