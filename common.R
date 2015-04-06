@@ -146,7 +146,7 @@ process_metabolome <- function(data, samples, logbase = 2,
     return(dh)
 }
 
-draw_heatmap <- function(data, label, filename=NULL, palette=NULL)
+draw_heatmap <- function(data, label, filename=NULL, palette=NULL, mlimit = NULL)
 {
     dm = as.matrix(data)
     dm = melt(dm)
@@ -171,7 +171,12 @@ draw_heatmap <- function(data, label, filename=NULL, palette=NULL)
         myPalette <- colorRampPalette(rev(brewer.pal(5, "RdBu")), space="rgb")
         #myPalette <- colorRampPalette(rev(c("red", "white","blue")))
     }
-    mm = max(abs(dm$value))
+    if (is.null(mlimit))
+    {
+        mm = max(abs(dm$value))
+    } else {
+        mm = mlimit
+    }
     p <- ggplot(dm, aes(x=Var2, y=Var1, fill=value))
     p <- p + geom_tile(aes(fill = value))
     p <- p + geom_text(aes(label = inflab))

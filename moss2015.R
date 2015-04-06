@@ -9,6 +9,7 @@ heatmap.file = "./results/moss2015"
 result.file = "./results/moss2015.txt"
 names.file = "./names.txt"
 PV_REQ = 0.05 #Requested p-value for metabolite selection
+SCALE_HM <- 4.5
 MARK_K0_E0 <- "+"
 require(reshape2)
 
@@ -19,6 +20,10 @@ data$sample <- sapply(strsplit(data$FileName, split = '-'), "[", 2)
 data$sample <- sapply(strsplit(data$sample, split = '\\.'), "[", 1)
 data$FileName <- NULL
 data$Name <- sub("^[?[:space:]]*", "", data$Name)
+full_names <- unique(data$Name)
+full_samples <- unique(data$sample)
+full_set <- expand.grid(Name = full_names, sample = full_samples)
+data <- merge(data, full_set, by = c("Name", "sample"), all = TRUE)
 d1 <- data[data$sample %in% 1:36,]
 d2 <- data[data$sample %in% 37:72,]
 d3 <- data[data$sample %in% 81:106,]
@@ -40,14 +45,17 @@ names(d3)[1] <- "Name"
 d3[is.na(d3)] <- 0 # empty cell => no metabolite
 #d3[d3==""] <- 0
 
-d3 <- read.csv(data.file.old, header=T, stringsAsFactors=F)
+#d3 <- read.csv(data.file.old, header=T, stringsAsFactors=F)
 #d3[is.na(d3)] <- 0 # empty cell => no metabolite
 
 samples <- read.csv(samples.file, header=T, stringsAsFactors=F)
 rownames(samples) <- samples$sample
 s1 <- samples[samples$ctrl == "K0",]
+s1 <- s1[order(s1$state),]
 s2 <- samples[samples$ctrl == "K5",]
+s2 <- s2[order(s2$state),]
 s3 <- samples[samples$ctrl == "K30",]
+s3 <- s3[order(s3$state),]
 
 mts <- c()
 
@@ -62,10 +70,11 @@ mts <- c(mts, rownames(dm.m))
 
 
 dm.m <- process_metabolome(d1, s1, 10, names.file, result.file, req = mts)
-draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_01.png"))
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_01.png"), mlimit = SCALE_HM)
 
 dm.m <- process_metabolome(d2, s2, 10, names.file, result.file, req = mts)
-draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_05.png"))
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_05.png"), mlimit = SCALE_HM)
 
 dm.m <- process_metabolome(d3, s3, 10, names.file, result.file, req = mts)
-draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_30.png"))
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_30.png"), mlimit = SCALE_HM)
+
