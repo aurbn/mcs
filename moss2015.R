@@ -1,5 +1,6 @@
 rm(list=ls())
 source("common.R")
+require(reshape2)
 
 data.file = "./data/moss2015_raw.txt"
 data.file.old = "./data/moss2_2015.data"
@@ -11,7 +12,9 @@ names.file = "./names.txt"
 PV_REQ = 0.05 #Requested p-value for metabolite selection
 SCALE_HM <- 4.5
 MARK_K0_E0 <- "+"
-require(reshape2)
+
+
+BAD_CHROMS = c(57, 58, 91, 92, 82)
 
 # Read the data
 data = read.csv(data.file, sep = '\t', header=T, stringsAsFactors=F)
@@ -24,6 +27,22 @@ full_names <- unique(data$Name)
 full_samples <- unique(data$sample)
 full_set <- expand.grid(Name = full_names, sample = full_samples)
 data <- merge(data, full_set, by = c("Name", "sample"), all = TRUE)
+
+samples <- read.csv(samples.file, header=T, stringsAsFactors=F)
+samples <- samples[!(samples$sample %in% BAD_CHROMS),]
+rownames(samples) <- samples$sample
+
+data.w <- dcast(data, Name ~ sample )
+data.w <- data.w[,c("Name", as.character(samples$sample))]
+write.table(data.w, "results/raw.data.csv", sep = '\t', row.names = FALSE)
+
+# da.na <- is.na(data.w[,-1])
+# nas <- apply(da.na, 2, sum)
+# nas <- nas/nrow(data.w)
+# names(nas>0.7)
+# bad_chroms <- unique(c(BAD_CHROMS, names(nas>0.7)))
+# samples <- samples[!(samples$sample %in% bad_chroms),]
+
 d1 <- data[data$sample %in% 1:36,]
 d2 <- data[data$sample %in% 37:72,]
 d3 <- data[data$sample %in% 81:106,]
@@ -48,8 +67,7 @@ d3[is.na(d3)] <- 0 # empty cell => no metabolite
 #d3 <- read.csv(data.file.old, header=T, stringsAsFactors=F)
 #d3[is.na(d3)] <- 0 # empty cell => no metabolite
 
-samples <- read.csv(samples.file, header=T, stringsAsFactors=F)
-rownames(samples) <- samples$sample
+
 s1 <- samples[samples$ctrl == "K0",]
 s1 <- s1[order(s1$state),]
 s2 <- samples[samples$ctrl == "K5",]
@@ -70,11 +88,14 @@ mts <- c(mts, rownames(dm.m))
 
 
 dm.m <- process_metabolome(d1, s1, 10, names.file, result.file, req = mts)
-draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_01.png"), mlimit = SCALE_HM)
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_01.png"), 
+             mlimit = SCALE_HM, title = "Day 2")
 
 dm.m <- process_metabolome(d2, s2, 10, names.file, result.file, req = mts)
-draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_05.png"), mlimit = SCALE_HM)
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_05.png"), 
+             mlimit = SCALE_HM, title = "Day 5")
 
 dm.m <- process_metabolome(d3, s3, 10, names.file, result.file, req = mts)
-draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_30.png"), mlimit = SCALE_HM)
+draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_30.png"),
+             mlimit = SCALE_HM, title = "Day 30")
 

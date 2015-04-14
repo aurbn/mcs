@@ -146,7 +146,7 @@ process_metabolome <- function(data, samples, logbase = 2,
     return(dh)
 }
 
-draw_heatmap <- function(data, label, filename=NULL, palette=NULL, mlimit = NULL)
+draw_heatmap <- function(data, label, filename=NULL, palette=NULL, mlimit = NULL, title = NULL)
 {
     dm = as.matrix(data)
     dm = melt(dm)
@@ -188,6 +188,10 @@ draw_heatmap <- function(data, label, filename=NULL, palette=NULL, mlimit = NULL
     p <- p + coord_equal()
     p <- p + theme_bw()
     p <- p + theme(axis.text.x=element_text(angle=45, hjust=1))
+   if (!is.null(title))
+   {
+       p <- p + ggtitle(title)
+   }
 
     if (!is.null(filename))
     {
