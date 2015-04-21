@@ -32,6 +32,11 @@ samples <- read.csv(samples.file, header=T, stringsAsFactors=F)
 samples <- samples[!(samples$sample %in% BAD_CHROMS),]
 rownames(samples) <- samples$sample
 
+#Normalize by mass
+data <- merge(data, samples[,c("sample","mass")], by = "sample")
+data$Conc. <- data$Conc./data$mass
+data$mass <- NULL
+
 data.w <- dcast(data, Name ~ sample )
 data.w <- data.w[,c("Name", as.character(samples$sample))]
 write.table(data.w, "results/raw.data.csv", sep = '\t', row.names = FALSE)
