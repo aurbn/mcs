@@ -138,7 +138,7 @@ for (m in mts)
         geom_hline(aes(yintercept = k05, color = "K05"), size = 1.5)+
         geom_hline(aes(yintercept = k30, color = "K30"), size = 1.5)
     
-    ggsave(paste0("results/mts/", gsub("/", "_", m), ".png"))
+    ggsave(paste0("results/mts/", gsub("/", "_", m), ".png"), scale = 2)
         
     
 }
