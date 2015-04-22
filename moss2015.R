@@ -16,6 +16,9 @@ MARK_K0_E0 <- "+"
 
 BAD_CHROMS = c(57, 58, 91, 92, 82)
 
+
+dir.create("results", showWarnings = FALSE)
+dir.create("results/mts", showWarnings = FALSE)
 # Read the data
 data = read.csv(data.file, sep = '\t', header=T, stringsAsFactors=F)
 data <- data[, c("FileName", "Name", "Conc.")]
@@ -39,7 +42,15 @@ data$mass <- NULL
 
 data.w <- dcast(data, Name ~ sample )
 data.w <- data.w[,c("Name", as.character(samples$sample))]
-write.table(data.w, "results/raw.data.csv", sep = '\t', row.names = FALSE)
+rownames(data.w) <- data.w$Name
+data.w$Name <- NULL
+x <- apply(!is.na(data.w), 1, sum)
+mdrop <- names(x[x==0])
+data.w <- data.w[x!=0,]
+data <- data[!(data$Name %in% mdrop),]
+write.table(data.w, "results/raw.data.csv", sep = '\t', row.names = TRUE)
+write.table(x[order(x, decreasing = TRUE)], "results/mrtabs_ch.csv", sep = '\t', row.names = TRUE)
+
 
 # da.na <- is.na(data.w[,-1])
 # nas <- apply(da.na, 2, sum)
@@ -90,6 +101,47 @@ mts <- c(mts, rownames(dm.m))
 
 dm.m <- process_metabolome(d3, s3, 10, names.file, result.file)
 mts <- c(mts, rownames(dm.m))
+
+colors <- c("K00"="red", "K05" = "blue", "K30" = "green")
+
+for (m in mts)
+{
+    d <- data.w[rownames(data.w) == m,]
+    d <- t(d)
+    d <- data.frame(rownames(d),d, stringsAsFactors = FALSE)
+    names(d) <- c("sample", "val")
+    #d <- d[-1,]
+    d$sample <- as.numeric(d$sample)
+    d$val <- as.numeric(d$val)
+    rownames(d) <- NULL
+    d <- merge(d, samples[,c("sample", "state", "ctrl" )], by = "sample", all.x = TRUE)
+    g <- expand.grid(unique(d$state), unique(d$ctrl))
+    names(g) <- c("state", "ctrl")
+    d <- merge(d, g, by = c("state", "ctrl"), all.y = T)
+    d[d$ctrl == 'K5', "ctrl"] <- 'K05'
+    d[d$ctrl == 'K0', "ctrl"] <- 'K00'
+    
+    
+    d <- d[order(d$state, d$ctrl),]
+    k00 <- mean(na.omit(d[d$state == "K0", "val"]))
+    k05 <- mean(na.omit(d[d$state == "K5", "val"]))
+    k30 <- mean(na.omit(d[d$state == "K30", "val"]))
+    d <- d[d$state != "K0",]
+    d <- d[d$state != "K5",]
+    d <- d[d$state != "K30",]
+    
+    p <- ggplot(data = d, aes(x=state, y=val, fill=ctrl))+
+        scale_fill_manual(values = colors)+
+        geom_bar(stat="identity", position=position_dodge(), colour="black") + 
+        theme(axis.text.x=element_text(angle=45, hjust=1))+
+        geom_hline(aes(yintercept = k00, color = "K00"), size = 1.5)+
+        geom_hline(aes(yintercept = k05, color = "K05"), size = 1.5)+
+        geom_hline(aes(yintercept = k30, color = "K30"), size = 1.5)
+    
+    ggsave(paste0("results/mts/", gsub("/", "_", m), ".png"))
+        
+    
+}
 
 
 dm.m <- process_metabolome(d1, s1, 10, names.file, result.file, req = mts)
