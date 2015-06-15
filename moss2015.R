@@ -7,11 +7,13 @@ data.file.old = "./data/moss2_2015.data"
 
 samples.file = "./data/moss2015_samples.txt"
 heatmap.file = "./results/moss2015"
+heatmap.file.2 = "./results/_moss2015"
 result.file = "./results/moss2015.txt"
 names.file = "./names.txt"
-PV_REQ = 0.05 #Requested p-value for metabolite selection
+PV_REQ = 0.1#0.05 #Requested p-value for metabolite selection
 SCALE_HM <- 4.5
 MARK_K0_E0 <- "+"
+M_REQ = c("sucrose 2583", "phosphate", "glucose (aP)", "glucose (bP)")
 
 
 BAD_CHROMS = c(57, 58, 91, 92, 82)
@@ -40,6 +42,8 @@ data <- merge(data, samples[,c("sample","mass")], by = "sample")
 data$Conc. <- data$Conc./data$mass
 data$mass <- NULL
 
+
+####### FILTERING ############
 data.w <- dcast(data, Name ~ sample )
 data.w <- data.w[,c("Name", as.character(samples$sample))]
 rownames(data.w) <- data.w$Name
@@ -52,6 +56,35 @@ write.table(data.w, "results/raw.data.csv", sep = '\t', row.names = TRUE)
 write.table(x[order(x, decreasing = TRUE)], "results/mrtabs_ch.csv", sep = '\t', row.names = TRUE)
 
 
+x <- data.frame(name = names(x), chroms = x)
+x <- subset(x, chroms>0)
+x$name <- factor(x$name, levels=x$name[order(-x$chroms)])
+p <- ggplot(data = x, aes(x=name, y=chroms))+
+    geom_bar(stat="identity", colour="black") + 
+    theme(axis.text.x=element_text(angle=45, hjust=1))
+p
+ggsave("results/mrtabs_ch.png", p, scale = 2)
+
+
+ok_chroms <- sapply(M_REQ, function(x) 
+    colnames(data.w)[!is.na(data.w[x,])])
+ok_chroms <- Reduce(intersect, ok_chroms)
+data.old <- data
+data <- subset(data, sample %in% ok_chroms)
+samples <- subset(samples, sample %in% ok_chroms)
+
+data.w <- data.w[,ok_chroms]
+x <- apply(!is.na(data.w), 1, sum)
+x <- data.frame(name = names(x), chroms = x)
+x <- subset(x, chroms>0)
+x$name <- factor(x$name, levels=x$name[order(-x$chroms)])
+p <- ggplot(data = x, aes(x=name, y=chroms))+
+    geom_bar(stat="identity", colour="black") + 
+    theme(axis.text.x=element_text(angle=45, hjust=1))
+p
+ggsave("results/mrtabs_ch_f.png", p, scale = 2)
+
+
 # da.na <- is.na(data.w[,-1])
 # nas <- apply(da.na, 2, sum)
 # nas <- nas/nrow(data.w)
@@ -59,6 +92,7 @@ write.table(x[order(x, decreasing = TRUE)], "results/mrtabs_ch.csv", sep = '\t',
 # bad_chroms <- unique(c(BAD_CHROMS, names(nas>0.7)))
 # samples <- samples[!(samples$sample %in% bad_chroms),]
 
+######### PLOTS #################
 d1 <- data[data$sample %in% 1:36,]
 d2 <- data[data$sample %in% 37:72,]
 d3 <- data[data$sample %in% 81:106,]
@@ -96,7 +130,7 @@ mts <- c()
 dm.m <- process_metabolome(d1, s1, 10, names.file, result.file)
 mts <- c(mts, rownames(dm.m))
 
-dm.m <- process_metabolome(d2, s2, 10, names.file, result.file)
+dm.m <- process_metabolome(d2, s2, 10, names.file)
 mts <- c(mts, rownames(dm.m))
 
 dm.m <- process_metabolome(d3, s3, 10, names.file, result.file)
@@ -143,16 +177,28 @@ for (m in mts)
     
 }
 
+require(gplots)
+color <- colorRampPalette(rev(c("#D73027", "#FC8D59", "#FEE090", 
+                                "#FFFFBF", "#E0F3F8", "#91BFDB", "#4575B4")))(300)
+
 
 dm.m <- process_metabolome(d1, s1, 10, names.file, result.file, req = mts)
 draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_01.png"), 
              mlimit = SCALE_HM, title = "Day 2")
+draw_heatmap.2(dm.m, expression(log[10](fc)), paste0(heatmap.file.2, "_01.png"), 
+             mlimit = SCALE_HM, title = "Day 2")
+
 
 dm.m <- process_metabolome(d2, s2, 10, names.file, result.file, req = mts)
 draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_05.png"), 
              mlimit = SCALE_HM, title = "Day 5")
+draw_heatmap.2(dm.m, expression(log[10](fc)), paste0(heatmap.file.2, "_05.png"), 
+               mlimit = SCALE_HM, title = "Day 5")
+
 
 dm.m <- process_metabolome(d3, s3, 10, names.file, result.file, req = mts)
 draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_30.png"),
              mlimit = SCALE_HM, title = "Day 30")
+draw_heatmap.2(dm.m, expression(log[10](fc)), paste0(heatmap.file.2, "_30.png"), 
+               mlimit = SCALE_HM, title = "Day 30")
 

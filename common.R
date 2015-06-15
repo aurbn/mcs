@@ -1,6 +1,8 @@
 require(ggplot2)
 require(reshape2)
 require(RColorBrewer)
+require(gplots)
+
 
 process_metabolome <- function(data, samples, logbase = 2,
                                names_file = NULL, result_file=NULL,
@@ -83,10 +85,16 @@ process_metabolome <- function(data, samples, logbase = 2,
 
     #consruct dataframe with fold changes for each found Metabolite 
     dh = data.frame(Name = data$Name) #data for heatmap
-    for (s in all_states)
+    all_states.old <- all_states
+    all_states <- c()
+    for (s in all_states.old)
     {
         se = paste0("X", samples[samples$state == s, "sample"]) #experiment samples
-        dh = cbind(dh, apply(data[,se], 1, mean))
+        if (length(se) > 0)
+        {
+            dh = cbind(dh, apply(data[,se , drop = FALSE], 1, mean))
+            all_states <- c(all_states, s)
+        }
     }
     names(dh) = c("Name", all_states)
     rownames(dh) <- dh$Name
@@ -199,4 +207,48 @@ draw_heatmap <- function(data, label, filename=NULL, palette=NULL, mlimit = NULL
         dev.off()
     }
     print(p)
+}
+
+draw_heatmap.2 <- function(data, label, filename=NULL, palette=NULL, mlimit = NULL, title = NULL)
+{
+    dm = as.matrix(data)
+    
+    #handle infinites
+    #t = dm$value
+    t = is.finite(dm)
+    mm = max(abs(t))
+    dinf = is.infinite(dm)
+    deql = is.na(dm)
+    dm[deql] <- 0
+    dm[dinf] <- mm*sign(dm[dinf])
+    inflab <- matrix("", nrow = nrow(dm), ncol = ncol(dm))
+    rownames(inflab) <- rownames(dm)
+    colnames(inflab) <- colnames(dm)
+    inflab[dinf] <- "X"
+    inflab[deql] <- MARK_K0_E0
+    # dm$inflab[!dinf] <- round(dm$value[!dinf], digits=1)
+    
+    
+    if (is.null(palette))
+    {
+        #COLOR palletes setut is here
+        myPalette <- colorRampPalette(rev(brewer.pal(5, "RdBu")), space="rgb")
+        #myPalette <- colorRampPalette(rev(c("red", "white","blue")))
+    }
+    if (is.null(mlimit))
+    {
+        mm = max(abs(dm$value))
+    } else {
+        mm = mlimit
+    }
+    
+    if (!is.null(filename))
+        png(filename)
+    
+    heatmap.2(dm, Colv = TRUE, Rowv = FALSE, dendrogram = "col", col = color, 
+              trace = "none", cellnote = inflab, notecol = "black", scale = "none",
+              main = title)
+    
+    if (!is.null(filename))
+        dev.off()
 }
