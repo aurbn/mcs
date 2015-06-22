@@ -237,7 +237,7 @@ draw_heatmap.2 <- function(data, label, filename=NULL, palette=NULL, mlimit = NU
     }
     if (is.null(mlimit))
     {
-        mm = max(abs(dm$value))
+        mm = max(abs(dm))
     } else {
         mm = mlimit
     }
