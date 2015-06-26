@@ -45,6 +45,7 @@ data$mass <- NULL
 
 ####### FILTERING ############
 data.w <- dcast(data, Name ~ sample )
+data.w.old <- data.w
 data.w <- data.w[,c("Name", as.character(samples$sample))]
 rownames(data.w) <- data.w$Name
 data.w$Name <- NULL
@@ -66,11 +67,15 @@ p
 ggsave("results/mrtabs_ch.png", p, scale = 2)
 
 
-ok_chroms <- sapply(M_REQ, function(x) 
-    colnames(data.w)[!is.na(data.w[x,])])
-ok_chroms <- Reduce(intersect, ok_chroms)
+nna_sums <- apply(data.w, 2, function(x) sum(!is.na(x)))
+ok_chroms <- names(nna_sums[nna_sums > 40])
+
+#ok_chroms <- sapply(M_REQ, function(x) 
+#    colnames(data.w)[!is.na(data.w[x,])])
+#ok_chroms <- Reduce(intersect, ok_chroms)
 data.old <- data
 data <- subset(data, sample %in% ok_chroms)
+samples.old <- samples
 samples <- subset(samples, sample %in% ok_chroms)
 
 data.w <- data.w[,ok_chroms]
@@ -140,15 +145,20 @@ colors <- c("K00"="red", "K05" = "blue", "K30" = "green")
 
 for (m in mts)
 {
-    d <- data.w[rownames(data.w) == m,]
+    d <- data.w.old[data.w.old$Name == m,]
+    
+    if(nrow(d) == 0)
+        next
+    
     d <- t(d)
-    d <- data.frame(rownames(d),d, stringsAsFactors = FALSE)
+    d <- data.frame(rownames(d), d, stringsAsFactors = FALSE)
+    d<-d[-1,]
     names(d) <- c("sample", "val")
     #d <- d[-1,]
     d$sample <- as.numeric(d$sample)
     d$val <- as.numeric(d$val)
     rownames(d) <- NULL
-    d <- merge(d, samples[,c("sample", "state", "ctrl" )], by = "sample", all.x = TRUE)
+    d <- merge(d, samples.old[,c("sample", "state", "ctrl" )], by = "sample", all.x = TRUE)
     g <- expand.grid(unique(d$state), unique(d$ctrl))
     names(g) <- c("state", "ctrl")
     d <- merge(d, g, by = c("state", "ctrl"), all.y = T)
@@ -201,4 +211,28 @@ draw_heatmap(dm.m, expression(log[10](fc)), paste0(heatmap.file, "_30.png"),
              mlimit = SCALE_HM, title = "Day 30")
 draw_heatmap.2(dm.m, expression(log[10](fc)), paste0(heatmap.file.2, "_30.png"), 
                mlimit = SCALE_HM, title = "Day 30")
+
+
+
+#### DRAW OWERVIEW ####
+
+dw <- data.w.old
+rownames(dw) <- dw$Name
+dw$Name <- NULL
+dw <- dw[rowSums(!is.na(dw)) != 0,]
+dw <- dw[,order(as.numeric(colnames(dw)))]
+dw.m <- as.matrix(dw)
+#png("./results/overview_raw.png")
+draw_heatmap.2.raw(log(dw.m))
+dev.off()
+
+dw <- data.w
+
+dw$Name <- NULL
+dw <- dw[rowSums(!is.na(dw)) != 0,]
+dw <- dw[,order(as.numeric(colnames(dw)))]
+dw.m <- as.matrix(dw)
+png("./results/overview_filt.png", res=1200)
+draw_heatmap.2.raw(log(dw.m))
+dev.off()
 

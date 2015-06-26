@@ -252,3 +252,51 @@ draw_heatmap.2 <- function(data, label, filename=NULL, palette=NULL, mlimit = NU
     if (!is.null(filename))
         dev.off()
 }
+
+draw_heatmap.2.raw <- function(data, label, filename=NULL, palette=NULL, mlimit = NULL, title = NULL)
+{
+    dm = as.matrix(data)
+    
+    #handle infinites
+    #t = dm$value
+    t = is.finite(dm)
+    mm = max(abs(t))
+    dinf = is.infinite(dm)
+    deql = is.na(dm)
+    #dm[deql] <- 0
+    dm[deql] <- min(dm)
+    dm[dinf] <- mm*sign(dm[dinf])
+    inflab <- matrix("", nrow = nrow(dm), ncol = ncol(dm))
+    rownames(inflab) <- rownames(dm)
+    colnames(inflab) <- colnames(dm)
+    inflab[dinf] <- "X"
+    inflab[deql] <- MARK_K0_E0
+    # dm$inflab[!dinf] <- round(dm$value[!dinf], digits=1)
+    
+    
+    dm <- ifelse(dm > 50, 60, dm)
+    
+    
+    if (is.null(palette))
+    {
+        #COLOR palletes setut is here
+        myPalette <- colorRampPalette((brewer.pal(5, "OrRd")), space="rgb")
+        #myPalette <- colorRampPalette(rev(c("red", "white","blue")))
+    }
+    if (is.null(mlimit))
+    {
+        mm = max(abs(dm))
+    } else {
+        mm = mlimit
+    }
+    
+    if (!is.null(filename))
+        png(filename)
+    
+    heatmap.2(dm, Colv = FALSE, Rowv = FALSE, dendrogram = "none", col = myPalette, 
+              trace = "none", cellnote = inflab, notecol = "black", scale = "none",
+              main = title, key = FALSE, lwid = c(1, 100), lhei = c(1,100), margins = c(2, 7))
+    
+    if (!is.null(filename))
+        dev.off()
+}
